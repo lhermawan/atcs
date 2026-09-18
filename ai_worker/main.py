@@ -8,7 +8,7 @@ import threading
 # --- KONFIGURASI DASAR ---
 AMS_API_URL = "https://ams.ciamiskab.go.id:5443/LiveApp/rest/v2/broadcasts/list/0/50"
 API_URL = "https://api.atcs.ciamiskab.go.id/api/traffic-logs"
-TARGET_CAMERA = "Simpang Tonjong Arah Tyara" # Kosongkan ("") jika ingin otomatis memilih CCTV pertama yang nyala
+TARGET_CAMERA = "Simpang Kodim Arah Banjar" # Kosongkan ("") jika ingin otomatis memilih CCTV pertama yang nyala
 
 def get_active_stream():
     """Mengambil satu CCTV dari API Ant Media Server"""
