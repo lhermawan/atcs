@@ -85,10 +85,15 @@ def yolo_worker(model):
                 
                 for i, (is_in, is_out) in enumerate(zip(crossed_in, crossed_out)):
                     cls_id = tracked_detections.class_id[i]
-                    if is_in:
+                    
+                    # Logika arah (Kiri ke Kanan -> is_in = Atas ke Bawah, is_out = Bawah ke Atas)
+                    actual_in = is_out if LINE_DIR == 'swapped' else is_in
+                    actual_out = is_in if LINE_DIR == 'swapped' else is_out
+                    
+                    if actual_in:
                         if cls_id == 2 or cls_id in [5,7]: temp_car_in += 1
                         elif cls_id == 3: temp_motor_in += 1
-                    if is_out:
+                    if actual_out:
                         if cls_id == 2 or cls_id in [5,7]: temp_car_out += 1
                         elif cls_id == 3: temp_motor_out += 1
                             
@@ -146,19 +151,26 @@ def main():
     fps = int(cap.get(cv2.CAP_PROP_FPS))
     if fps == 0 or fps > 60: fps = 25
     
-    # Inisialisasi Line Zone sesuai konfigurasi Laravel
+    # Inisialisasi Line Zone selalu konstan (Kiri ke Kanan) agar posisi visual tidak meloncat
     y_pos = int(height * (LINE_POS / 100.0))
-    if LINE_DIR == 'swapped':
-        start = sv.Point(width, y_pos)
-        end = sv.Point(0, y_pos)
-    else:
-        start = sv.Point(0, y_pos)
-        end = sv.Point(width, y_pos)
+    start = sv.Point(0, y_pos)
+    end = sv.Point(width, y_pos)
         
     line_zone = sv.LineZone(start=start, end=end)
+    
+    # Kustomisasi teks yang menempel di garis
+    in_label = "OUT" if LINE_DIR == 'swapped' else "IN"
+    out_label = "IN" if LINE_DIR == 'swapped' else "OUT"
+    
     box_annotator = sv.BoxAnnotator(thickness=2)
     label_annotator = sv.LabelAnnotator(text_thickness=1, text_scale=0.5)
-    line_zone_annotator = sv.LineZoneAnnotator(thickness=2, text_thickness=2, text_scale=1)
+    line_zone_annotator = sv.LineZoneAnnotator(
+        thickness=2, 
+        text_thickness=2, 
+        text_scale=1,
+        custom_in_text=in_label,
+        custom_out_text=out_label
+    )
 
     yolo_thread = threading.Thread(target=yolo_worker, args=(model,), daemon=True)
     yolo_thread.start()
