@@ -147,6 +147,17 @@ def main():
         current_time = time.time()
         if current_time - last_api_send >= 60:
             print(f"[API UPDATE] Mobil: {car_count}, Motor: {motorcycle_count}")
+            payload = {
+                "stream_id": stream_id,
+                "camera_name": camera_name,
+                "car_count": car_count,
+                "motorcycle_count": motorcycle_count
+            }
+            try:
+                requests.post(API_URL, json=payload, verify=False, timeout=5)
+            except Exception as e:
+                print(f"Gagal mengirim ke API Laravel: {e}")
+                
             last_api_send = current_time
 
 if __name__ == "__main__":
