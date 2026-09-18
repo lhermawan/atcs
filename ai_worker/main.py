@@ -9,8 +9,8 @@ import os
 
 # --- KONFIGURASI DASAR ---
 AMS_API_URL = "http://192.168.122.1:5080/LiveApp/rest/v2/broadcasts/list/0/50"
-API_URL = "https://api.atcs.ciamiskab.go.id/api/traffic-logs"
-CONFIG_API_URL = "https://api.atcs.ciamiskab.go.id/api/ai-config"
+API_URL = "https://atcs.ciamiskab.go.id/api/traffic-logs"
+CONFIG_API_URL = "https://atcs.ciamiskab.go.id/api/ai-config"
 
 # Mengambil konfigurasi awal dari Laravel
 def get_target_camera():
