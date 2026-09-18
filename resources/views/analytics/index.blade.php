@@ -56,9 +56,8 @@
                 </h2>
                 <span class="text-xs text-slate-400">{{ $cameraName }}</span>
             </div>
-            <div class="w-full aspect-video bg-black relative flex items-center justify-center">
+            <div id="video-container" class="w-full aspect-video bg-black relative flex items-center justify-center overflow-hidden">
                 @if($streamId)
-                    <!-- Gunakan iframe bawaan Ant Media Server agar lebih stabil dan otomatis WebRTC/HLS -->
                     <iframe 
                         src="https://ams.ciamiskab.go.id:5443/live/play.html?name={{ $streamId }}&autoplay=true" 
                         frameborder="0" 
@@ -68,6 +67,15 @@
                 @else
                     <span class="text-slate-500 text-sm">Menunggu Stream AI Aktif...</span>
                 @endif
+                
+                <!-- Interactive Drag Line Overlay -->
+                <div id="drag-overlay" class="absolute inset-0 z-10 hidden bg-transparent"></div>
+                <div id="drag-line" class="absolute w-full flex items-center justify-center cursor-ns-resize group z-20" style="top: {{ $linePosition }}%; height: 20px; margin-top: -10px;">
+                    <div class="absolute w-full h-1 bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]"></div>
+                    <div class="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg relative group-hover:scale-110 transition-transform select-none">
+                        ↕ Geser Garis
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -88,6 +96,44 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
+        // --- DRAG AND DROP LINE LOGIC ---
+        const dragLine = document.getElementById('drag-line');
+        const videoContainer = document.getElementById('video-container');
+        const dragOverlay = document.getElementById('drag-overlay');
+        const lineInput = document.getElementById('line_position');
+        
+        let isDragging = false;
+        
+        if (dragLine) {
+            dragLine.addEventListener('mousedown', function(e) {
+                isDragging = true;
+                dragOverlay.classList.remove('hidden'); // Blokir klik ke iframe saat drag
+            });
+            
+            document.addEventListener('mousemove', function(e) {
+                if (!isDragging) return;
+                
+                const rect = videoContainer.getBoundingClientRect();
+                let y = e.clientY - rect.top;
+                let percentage = Math.round((y / rect.height) * 100);
+                
+                // Batasi antara 10% dan 90%
+                if (percentage < 10) percentage = 10;
+                if (percentage > 90) percentage = 90;
+                
+                dragLine.style.top = percentage + '%';
+                lineInput.value = percentage;
+            });
+            
+            document.addEventListener('mouseup', function(e) {
+                if (isDragging) {
+                    isDragging = false;
+                    dragOverlay.classList.add('hidden');
+                }
+            });
+        }
+        
+        // --- CHART LOGIC ---
         const ctx = document.getElementById('trafficChart').getContext('2d');
         const trafficChart = new Chart(ctx, {
             type: 'line',
