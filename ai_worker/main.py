@@ -7,7 +7,8 @@ import threading
 import numpy as np
 
 # --- KONFIGURASI DASAR ---
-AMS_API_URL = "https://ams.ciamiskab.go.id:5443/LiveApp/rest/v2/broadcasts/list/0/50"
+# Gunakan localhost (127.0.0.1) karena AI dan Ant Media berada di server yang sama
+AMS_API_URL = "http://127.0.0.1:5080/LiveApp/rest/v2/broadcasts/list/0/50"
 API_URL = "https://api.atcs.ciamiskab.go.id/api/traffic-logs"
 TARGET_CAMERA = "Simpang Kodim Arah Banjar" 
 
@@ -100,8 +101,9 @@ def main():
         return
         
     clean_name = camera_name.replace(" ", "_").replace("-", "_")
-    SOURCE_STREAM = f"https://ams.ciamiskab.go.id:5443/LiveApp/streams/{stream_id}.m3u8"
-    TARGET_RTMP = f"rtmp://ams.ciamiskab.go.id/live/{clean_name}_ai"
+    # Gunakan jalur internal/localhost (Port 5080 untuk HTTP biasa, tanpa perlu SSL)
+    SOURCE_STREAM = f"http://127.0.0.1:5080/LiveApp/streams/{stream_id}.m3u8"
+    TARGET_RTMP = f"rtmp://127.0.0.1/live/{clean_name}_ai"
     
     print(f"[{camera_name}] Ditemukan! Stream ID: {stream_id}")
     print("Memuat Model YOLOv8s (Small)...")
