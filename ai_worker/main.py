@@ -37,7 +37,7 @@ def main():
     # Bersihkan nama kamera dari spasi agar aman untuk RTMP
     clean_name = camera_name.replace(" ", "_").replace("-", "_")
     
-    SOURCE_STREAM = f"http://ams.ciamiskab.go.id:5443/LiveApp/streams/{stream_id}.m3u8"
+    SOURCE_STREAM = f"https://ams.ciamiskab.go.id:5443/LiveApp/streams/{stream_id}.m3u8"
     TARGET_RTMP = f"rtmp://ams.ciamiskab.go.id/live/{clean_name}_ai"
     
     print(f"[{camera_name}] Ditemukan! Stream ID: {stream_id}")
