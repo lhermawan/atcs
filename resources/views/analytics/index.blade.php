@@ -2,7 +2,36 @@
 
 @section('content')
 <div class="container mx-auto">
-    <h1 class="text-3xl font-bold mb-6 text-slate-800">ATCS Analytics Dashboard</h1>
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-slate-800">ATCS Analytics Dashboard</h1>
+    </div>
+
+    @if (session('status'))
+        <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6" role="alert">
+            <p>{{ session('status') }}</p>
+        </div>
+    @endif
+
+    <!-- Control Panel -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+        <form action="{{ route('analytics.updateTarget') }}" method="POST" class="flex items-end gap-4">
+            @csrf
+            <div class="flex-1 max-w-sm">
+                <label for="target_camera" class="block text-sm font-medium text-slate-700 mb-1">Target Kamera AI</label>
+                <select id="target_camera" name="target_camera" class="bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5">
+                    @forelse($activeCameras as $cam)
+                        <option value="{{ $cam }}" {{ $currentTarget == $cam ? 'selected' : '' }}>{{ $cam }}</option>
+                    @empty
+                        <option value="Simpang Kodim Arah Banjar" {{ $currentTarget == 'Simpang Kodim Arah Banjar' ? 'selected' : '' }}>Simpang Kodim Arah Banjar</option>
+                        <option value="Simpang Tonjong" {{ $currentTarget == 'Simpang Tonjong' ? 'selected' : '' }}>Simpang Tonjong</option>
+                    @endforelse
+                </select>
+            </div>
+            <button type="submit" class="text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-300 font-medium rounded-lg text-sm px-5 py-2.5">
+                Pindahkan AI
+            </button>
+        </form>
+    </div>
     
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Live Video Section -->

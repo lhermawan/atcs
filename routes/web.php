@@ -19,6 +19,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
+    Route::post('/analytics/target', [AnalyticsController::class, 'updateTargetCamera'])->name('analytics.updateTarget');
 });
 
 require __DIR__.'/auth.php';
