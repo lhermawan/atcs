@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.public')
 
 @section('content')
 <div class="flex flex-col gap-4 h-full min-h-[calc(100vh-8rem)] relative z-10">
