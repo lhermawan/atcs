@@ -49,8 +49,8 @@ def main():
     TARGET_RTMP = f"rtmp://ams.ciamiskab.go.id/live/{clean_name}_ai"
     
     print(f"[{camera_name}] Ditemukan! Stream ID: {stream_id}")
-    print("Memuat Model YOLOv8...")
-    model = YOLO("yolov8n.pt") 
+    print("Memuat Model YOLOv8s (Small) untuk akurasi lebih baik...")
+    model = YOLO("yolov8s.pt") 
     
     print(f"Membuka sumber video: {SOURCE_STREAM}")
     cap = cv2.VideoCapture(SOURCE_STREAM, cv2.CAP_FFMPEG)
@@ -100,8 +100,8 @@ def main():
             cap = cv2.VideoCapture(SOURCE_STREAM, cv2.CAP_FFMPEG)
             continue
             
-        # Jalankan deteksi YOLO dengan minimal keyakinan 40% (conf=0.4) agar kotak tidak menumpuk
-        results = model(frame, classes=[2, 3, 5, 7], conf=0.4, verbose=False)
+        # Jalankan deteksi YOLO dengan minimal keyakinan 30% (conf=0.3)
+        results = model(frame, classes=[2, 3, 5, 7], conf=0.3, verbose=False)
         
         car_count = 0
         motorcycle_count = 0
