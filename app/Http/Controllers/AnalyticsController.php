@@ -10,24 +10,25 @@ class AnalyticsController extends Controller
 {
     public function index()
     {
-        // Ambil data hari ini, urutkan dari pagi ke malam
-        $todayLogs = TrafficLog::whereDate('created_at', today())
-            ->orderBy('created_at')
-            ->get();
+        $targetCameraSetting = \App\Models\Setting::where('key', 'target_camera')->first();
+        $currentTarget = $targetCameraSetting ? $targetCameraSetting->value : 'Simpang Kodim Arah Banjar';
 
-        // Kelompokkan rata-rata kepadatan berdasarkan Jam
-        $hourlyData = $todayLogs->groupBy(function ($log) {
-            return \Carbon\Carbon::parse($log->created_at)->format('H:00');
-        });
+        // Ambil 30 data terakhir untuk render pertama kali
+        $logs = TrafficLog::where('camera_name', $currentTarget)
+            ->latest()
+            ->take(30)
+            ->get()
+            ->reverse()
+            ->values();
 
         $labels = [];
         $carData = [];
         $motorData = [];
 
-        foreach ($hourlyData as $hour => $logs) {
-            $labels[] = $hour;
-            $carData[] = round($logs->avg('car_count'));
-            $motorData[] = round($logs->avg('motorcycle_count'));
+        foreach ($logs as $log) {
+            $labels[] = \Carbon\Carbon::parse($log->created_at)->format('H:i');
+            $carData[] = $log->car_count;
+            $motorData[] = $log->motorcycle_count;
         }
 
         // Ambil kamera terakhir yang sedang diproses oleh AI
@@ -75,5 +76,35 @@ class AnalyticsController extends Controller
         );
 
         return back()->with('status', 'Kamera target AI berhasil diubah. AI akan otomatis me-restart proses dalam 10-30 detik.');
+    }
+
+    public function getChartData()
+    {
+        $targetCameraSetting = \App\Models\Setting::where('key', 'target_camera')->first();
+        $currentTarget = $targetCameraSetting ? $targetCameraSetting->value : 'Simpang Kodim Arah Banjar';
+
+        // Ambil 30 data terakhir (30 menit terakhir karena AI mengirim tiap 1 menit)
+        $logs = TrafficLog::where('camera_name', $currentTarget)
+            ->latest()
+            ->take(30)
+            ->get()
+            ->reverse()
+            ->values();
+
+        $labels = [];
+        $carData = [];
+        $motorData = [];
+
+        foreach ($logs as $log) {
+            $labels[] = \Carbon\Carbon::parse($log->created_at)->format('H:i');
+            $carData[] = $log->car_count;
+            $motorData[] = $log->motorcycle_count;
+        }
+
+        return response()->json([
+            'labels' => $labels,
+            'carData' => $carData,
+            'motorData' => $motorData
+        ]);
     }
 }

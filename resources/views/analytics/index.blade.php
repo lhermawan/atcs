@@ -60,7 +60,10 @@
 
         <!-- Chart Section -->
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col">
-            <h2 class="text-lg font-semibold mb-4 text-slate-800">Trafik Kepadatan (Hari Ini)</h2>
+            <h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path></svg>
+                Trafik Kepadatan (Real-Time 30 Menit Terakhir)
+            </h2>
             <div class="flex-1 w-full relative min-h-[300px]">
                 <canvas id="trafficChart"></canvas>
             </div>
@@ -68,35 +71,35 @@
     </div>
 </div>
 
+<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener("DOMContentLoaded", function() {
         const ctx = document.getElementById('trafficChart').getContext('2d');
-        
-        // Data dari Database Laravel
-        const labels = @json($labels);
-        const carData = @json($carData);
-        const motorData = @json($motorData);
-
         const trafficChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: labels.length > 0 ? labels : ['Belum Ada Data'],
-                datasets: [{
-                    label: 'Rata-rata Mobil per Menit',
-                    data: carData.length > 0 ? carData : [0],
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                    fill: true,
-                    tension: 0.3
-                }, {
-                    label: 'Rata-rata Motor per Menit',
-                    data: motorData.length > 0 ? motorData : [0],
-                    borderColor: 'rgba(255, 206, 86, 1)',
-                    backgroundColor: 'rgba(255, 206, 86, 0.2)',
-                    fill: true,
-                    tension: 0.3
-                }]
+                labels: {!! json_encode($labels) !!},
+                datasets: [
+                    {
+                        label: 'Mobil (Per Menit)',
+                        data: {!! json_encode($carData) !!},
+                        borderColor: '#3b82f6', // Blue
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true
+                    },
+                    {
+                        label: 'Motor (Per Menit)',
+                        data: {!! json_encode($motorData) !!},
+                        borderColor: '#f59e0b', // Amber
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true
+                    }
+                ]
             },
             options: {
                 responsive: true,
@@ -104,14 +107,38 @@
                 scales: {
                     y: {
                         beginAtZero: true,
-                        title: { display: true, text: 'Jumlah Kendaraan' }
+                        title: {
+                            display: true,
+                            text: 'Jumlah Kendaraan Lewat'
+                        }
                     },
                     x: {
-                        title: { display: true, text: 'Jam' }
+                        title: {
+                            display: true,
+                            text: 'Waktu (Jam:Menit)'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
                     }
                 }
             }
         });
+
+        // Polling Data Real-Time tiap 30 detik
+        setInterval(() => {
+            fetch('{{ route("analytics.data") }}')
+                .then(response => response.json())
+                .then(data => {
+                    trafficChart.data.labels = data.labels;
+                    trafficChart.data.datasets[0].data = data.carData;
+                    trafficChart.data.datasets[1].data = data.motorData;
+                    trafficChart.update();
+                })
+                .catch(error => console.error('Error fetching real-time data:', error));
+        }, 30000); // 30 detik
     });
 </script>
 @endsection
