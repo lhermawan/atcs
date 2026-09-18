@@ -48,8 +48,8 @@ def yolo_worker(model):
                 frame_to_process = latest_frame.copy()
                 
         if frame_to_process is not None:
-            # Jalankan deteksi
-            results = model(frame_to_process, classes=[2, 3, 5, 7], conf=0.3, verbose=False)
+            # Tingkatkan batas keyakinan (conf) menjadi 45% untuk mengurangi halusinasi di malam hari
+            results = model(frame_to_process, classes=[2, 3, 5, 7], conf=0.45, verbose=False)
             
             temp_boxes = []
             car_count = 0
@@ -67,25 +67,24 @@ def yolo_worker(model):
                     
                     if cls_id == 2:
                         car_count += 1
-                        color = (255, 0, 0) # Biru untuk mobil
+                        color = (255, 0, 0)
                         label = f"Mobil {conf:.2f}"
                     elif cls_id == 3:
                         motorcycle_count += 1
-                        color = (0, 255, 255) # Kuning untuk motor
+                        color = (0, 255, 255)
                         label = f"Motor {conf:.2f}"
                     elif cls_id in [5, 7]:
-                        color = (0, 0, 255) # Merah untuk truk/bus
+                        color = (0, 0, 255)
                         label = f"Besar {conf:.2f}"
                         
                     temp_boxes.append((x1, y1, x2, y2, color, label))
             
-            # Update global data secara aman
             with lock:
                 latest_boxes = temp_boxes
                 latest_counts["car"] = car_count
                 latest_counts["motorcycle"] = motorcycle_count
                 
-        time.sleep(0.01) # Mencegah 100% CPU loop
+        time.sleep(0.01)
 
 def main():
     import urllib3
@@ -101,7 +100,6 @@ def main():
         return
         
     clean_name = camera_name.replace(" ", "_").replace("-", "_")
-    # Gunakan jalur internal/localhost (Port 5080 untuk HTTP biasa, tanpa perlu SSL)
     SOURCE_STREAM = f"http://127.0.0.1:5080/LiveApp/streams/{stream_id}.m3u8"
     TARGET_RTMP = f"rtmp://127.0.0.1/live/{clean_name}_ai"
     
@@ -109,7 +107,6 @@ def main():
     print("Memuat Model YOLOv8s (Small)...")
     model = YOLO("yolov8s.pt") 
     
-    # Jalankan thread YOLO di background
     yolo_thread = threading.Thread(target=yolo_worker, args=(model,), daemon=True)
     yolo_thread.start()
     print("YOLO Worker thread started.")
@@ -160,22 +157,20 @@ def main():
             cap = cv2.VideoCapture(SOURCE_STREAM, cv2.CAP_FFMPEG)
             continue
             
-        # Update frame untuk diproses oleh YOLO worker
         with lock:
             latest_frame = frame
             current_boxes = list(latest_boxes)
             car_count = latest_counts["car"]
             motorcycle_count = latest_counts["motorcycle"]
             
-        # Langsung gambar kotak di frame utama (sangat cepat, 0 delay)
         for (x1, y1, x2, y2, color, label) in current_boxes:
             cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
             cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
                 
-        # Gambar Counter di layar
-        cv2.putText(frame, f"Mobil: {car_count}", (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 3)
-        cv2.putText(frame, f"Motor: {motorcycle_count}", (20, 80), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 3)
-        cv2.putText(frame, "LIVE - AI PENDETEKSI KENDARAAN", (20, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+        # Gambar Counter di layar (Digeser ke bawah agar tidak tertimpa jam CCTV)
+        cv2.putText(frame, f"Mobil: {car_count}", (20, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 3)
+        cv2.putText(frame, f"Motor: {motorcycle_count}", (20, 140), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 3)
+        cv2.putText(frame, "LIVE - AI PENDETEKSI KENDARAAN", (20, 180), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
 
         # Lempar frame secara mulus 25 FPS ke FFmpeg
         try:
