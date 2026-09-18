@@ -8,33 +8,35 @@ import sys
 import os
 import numpy as np
 import supervision as sv
+from trackers import ByteTrackTracker
 
 # --- KONFIGURASI DASAR ---
 AMS_API_URL = "http://192.168.122.1:5080/LiveApp/rest/v2/broadcasts/list/0/50"
 API_URL = "https://atcs.ciamiskab.go.id/api/traffic-logs"
 CONFIG_API_URL = "https://atcs.ciamiskab.go.id/api/ai-config"
 
-def get_target_camera():
+def get_ai_config():
     try:
         import urllib3
         urllib3.disable_warnings()
         response = requests.get(CONFIG_API_URL, verify=False, timeout=5)
         if response.status_code == 200:
-            return response.json().get('target_camera', None)
+            return response.json()
     except Exception as e:
         print(f"Gagal memanggil API Config: {e}")
-    return None
+    return {}
 
-TARGET_CAMERA = get_target_camera()
+config = get_ai_config()
+TARGET_CAMERA = config.get('target_camera')
+LINE_POS = config.get('line_position', 60)
+LINE_DIR = config.get('line_direction', 'normal')
 
 # Variabel Global
 latest_frame = None
 latest_detections = None
-latest_counts = {"car": 0, "motorcycle": 0}
-interval_counts = {"car": 0, "motorcycle": 0}
+latest_counts = {"car_in": 0, "car_out": 0, "motor_in": 0, "motor_out": 0}
+interval_counts = {"car_in": 0, "car_out": 0, "motor_in": 0, "motor_out": 0}
 lock = threading.Lock()
-
-from trackers import ByteTrackTracker
 
 # Supervision Setup
 tracker = ByteTrackTracker()
@@ -69,39 +71,40 @@ def yolo_worker(model):
                 frame_to_process = latest_frame.copy()
                 
         if frame_to_process is not None and line_zone is not None:
-            # Turunkan batas keyakinan (conf) agar objek malam hari tetap terdeteksi oleh tracker
             results = model(frame_to_process, classes=[2, 3, 5, 7], conf=0.25, verbose=False)[0]
-            
-            # Konversi hasil YOLO ke Supervision Detections
             detections = sv.Detections.from_ultralytics(results)
-            
-            # Update Tracker dengan Detections dari package baru
             tracked_detections = tracker.update(detections)
             
-            # Memicu Line Zone HANYA jika ada objek yang dilacak
             if len(tracked_detections) > 0:
                 crossed_in, crossed_out = line_zone.trigger(tracked_detections)
                 
-                # Hitung kategori spesifik
-                temp_car = 0
-                temp_motor = 0
+                temp_car_in = 0
+                temp_car_out = 0
+                temp_motor_in = 0
+                temp_motor_out = 0
                 
                 for i, (is_in, is_out) in enumerate(zip(crossed_in, crossed_out)):
-                    if is_in or is_out:
-                        cls_id = tracked_detections.class_id[i]
-                        if cls_id == 2 or cls_id in [5,7]:
-                            temp_car += 1
-                        elif cls_id == 3:
-                            temp_motor += 1
+                    cls_id = tracked_detections.class_id[i]
+                    if is_in:
+                        if cls_id == 2 or cls_id in [5,7]: temp_car_in += 1
+                        elif cls_id == 3: temp_motor_in += 1
+                    if is_out:
+                        if cls_id == 2 or cls_id in [5,7]: temp_car_out += 1
+                        elif cls_id == 3: temp_motor_out += 1
                             
                 with lock:
                     latest_detections = tracked_detections
-                    if temp_car > 0:
-                        latest_counts["car"] += temp_car
-                        interval_counts["car"] += temp_car
-                    if temp_motor > 0:
-                        latest_counts["motorcycle"] += temp_motor
-                        interval_counts["motorcycle"] += temp_motor
+                    latest_counts["car_in"] += temp_car_in
+                    interval_counts["car_in"] += temp_car_in
+                    
+                    latest_counts["car_out"] += temp_car_out
+                    interval_counts["car_out"] += temp_car_out
+                    
+                    latest_counts["motor_in"] += temp_motor_in
+                    interval_counts["motor_in"] += temp_motor_in
+                    
+                    latest_counts["motor_out"] += temp_motor_out
+                    interval_counts["motor_out"] += temp_motor_out
             else:
                 with lock:
                     latest_detections = tracked_detections
@@ -114,12 +117,12 @@ def main():
     
     global latest_frame, latest_detections, latest_counts, interval_counts, line_zone
     
-    print(f"Target Kamera dari Laravel: {TARGET_CAMERA}")
-    print("Mencari CCTV yang sedang LIVE...")
-    stream_id, camera_name = get_active_stream()
+    print(f"Target Kamera: {TARGET_CAMERA}")
+    print(f"Posisi Garis: {LINE_POS}% | Arah: {LINE_DIR}")
     
+    stream_id, camera_name = get_active_stream()
     if not stream_id:
-        print("Tidak ada CCTV yang sedang LIVE saat ini! Menunggu 10 detik...")
+        print("Tidak ada CCTV yang sedang LIVE! Menunggu 10 detik...")
         time.sleep(10)
         os.execv(sys.executable, ['python'] + sys.argv)
         return
@@ -129,12 +132,9 @@ def main():
     TARGET_RTMP = f"rtmp://192.168.122.1/live/{clean_name}_ai"
     
     print(f"[{camera_name}] Ditemukan! Stream ID: {stream_id}")
-    print("Memuat Model YOLOv8s (Small)...")
     model = YOLO("yolov8s.pt") 
     
-    print(f"Membuka sumber video: {SOURCE_STREAM}")
     cap = cv2.VideoCapture(SOURCE_STREAM, cv2.CAP_FFMPEG)
-    
     if not cap.isOpened():
         print("Gagal membuka stream video! Restarting...")
         time.sleep(5)
@@ -146,41 +146,30 @@ def main():
     fps = int(cap.get(cv2.CAP_PROP_FPS))
     if fps == 0 or fps > 60: fps = 25
     
-    # Inisialisasi Line Zone di 60% layar
-    start = sv.Point(0, int(height * 0.6))
-    end = sv.Point(width, int(height * 0.6))
+    # Inisialisasi Line Zone sesuai konfigurasi Laravel
+    y_pos = int(height * (LINE_POS / 100.0))
+    if LINE_DIR == 'swapped':
+        start = sv.Point(width, y_pos)
+        end = sv.Point(0, y_pos)
+    else:
+        start = sv.Point(0, y_pos)
+        end = sv.Point(width, y_pos)
+        
     line_zone = sv.LineZone(start=start, end=end)
-    
-    # Setup Annotator Supervision
     box_annotator = sv.BoxAnnotator(thickness=2)
     label_annotator = sv.LabelAnnotator(text_thickness=1, text_scale=0.5)
     line_zone_annotator = sv.LineZoneAnnotator(thickness=2, text_thickness=2, text_scale=1)
 
-    print(f"Resolusi Stream: {width}x{height} @ {fps}fps")
-    
-    # Jalankan thread YOLO di background
     yolo_thread = threading.Thread(target=yolo_worker, args=(model,), daemon=True)
     yolo_thread.start()
     
     ffmpeg_cmd = [
-        'ffmpeg',
-        '-y',
-        '-f', 'rawvideo',
-        '-vcodec', 'rawvideo',
-        '-pix_fmt', 'bgr24',
-        '-s', f"{width}x{height}",
-        '-r', str(fps),
-        '-i', '-',
-        '-c:v', 'libx264',
-        '-preset', 'veryfast',
-        '-maxrate', '1500k',
-        '-bufsize', '3000k',
-        '-pix_fmt', 'yuv420p',
-        '-f', 'flv',
-        TARGET_RTMP
+        'ffmpeg', '-y', '-f', 'rawvideo', '-vcodec', 'rawvideo',
+        '-pix_fmt', 'bgr24', '-s', f"{width}x{height}", '-r', str(fps),
+        '-i', '-', '-c:v', 'libx264', '-preset', 'veryfast',
+        '-maxrate', '1500k', '-bufsize', '3000k', '-pix_fmt', 'yuv420p',
+        '-f', 'flv', TARGET_RTMP
     ]
-    
-    print(f"Memulai transmisi ke: {TARGET_RTMP}")
     process = subprocess.Popen(ffmpeg_cmd, stdin=subprocess.PIPE)
     
     last_api_send = time.time()
@@ -200,10 +189,11 @@ def main():
         with lock:
             latest_frame = frame
             current_detections = latest_detections
-            car_total = latest_counts["car"]
-            motor_total = latest_counts["motorcycle"]
+            cin = latest_counts["car_in"]
+            cout = latest_counts["car_out"]
+            min = latest_counts["motor_in"]
+            mout = latest_counts["motor_out"]
             
-        # Gambar kotak, label, dan garis menggunakan Supervision Annotator
         if current_detections is not None and len(current_detections) > 0:
             labels = []
             for i in range(len(current_detections)):
@@ -219,9 +209,8 @@ def main():
             
         frame = line_zone_annotator.annotate(frame, line_counter=line_zone)
         
-        # Gambar Counter Total di layar
-        cv2.putText(frame, f"Total Mobil (Lewat Garis): {car_total}", (20, 80), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 3)
-        cv2.putText(frame, f"Total Motor (Lewat Garis): {motor_total}", (20, 120), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 3)
+        cv2.putText(frame, f"Mobil IN: {cin} | OUT: {cout}", (20, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2)
+        cv2.putText(frame, f"Motor IN: {min} | OUT: {mout}", (20, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 255), 2)
         cv2.putText(frame, "LIVE - ROBOFLOW SUPERVISION TRACKING", (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
 
         try:
@@ -233,17 +222,25 @@ def main():
         
         if current_time - last_api_send >= 60:
             with lock:
-                sent_car = interval_counts["car"]
-                sent_motor = interval_counts["motorcycle"]
-                interval_counts["car"] = 0
-                interval_counts["motorcycle"] = 0
+                s_cin = interval_counts["car_in"]
+                s_cout = interval_counts["car_out"]
+                s_min = interval_counts["motor_in"]
+                s_mout = interval_counts["motor_out"]
+                interval_counts = {k: 0 for k in interval_counts}
                 
-            print(f"[API UPDATE] Mobil Lewat: {sent_car}, Motor Lewat: {sent_motor}")
+            total_car = s_cin + s_cout
+            total_motor = s_min + s_mout
+            
+            print(f"[API UPDATE] Mobil (In:{s_cin} Out:{s_cout}) | Motor (In:{s_min} Out:{s_mout})")
             payload = {
                 "stream_id": stream_id,
                 "camera_name": camera_name,
-                "car_count": sent_car,
-                "motorcycle_count": sent_motor
+                "car_count": total_car,
+                "motorcycle_count": total_motor,
+                "car_in": s_cin,
+                "car_out": s_cout,
+                "motorcycle_in": s_min,
+                "motorcycle_out": s_mout
             }
             try:
                 requests.post(API_URL, json=payload, verify=False, timeout=5)
@@ -252,16 +249,19 @@ def main():
             last_api_send = current_time
             
         if current_time - last_config_check >= 20:
-            new_target = get_target_camera()
-            if new_target and new_target != TARGET_CAMERA:
-                print(f"!!! Perintah dari Admin: Pindah target ke '{new_target}' !!!")
+            new_conf = get_ai_config()
+            new_target = new_conf.get('target_camera')
+            new_pos = new_conf.get('line_position', 60)
+            new_dir = new_conf.get('line_direction', 'normal')
+            
+            if new_target != TARGET_CAMERA or new_pos != LINE_POS or new_dir != LINE_DIR:
+                print("!!! Perubahan Konfigurasi Dideteksi !!!")
                 print("Restarting worker...")
                 cap.release()
                 process.kill()
                 os.execv(sys.executable, ['python'] + sys.argv)
             last_config_check = current_time
             
-        # Pacing untuk menstabilkan FPS HLS stream (mencegah penumpukan buffer FFmpeg)
         time_elapsed = time.time() - loop_start
         if time_elapsed < frame_delay:
             time.sleep(frame_delay - time_elapsed)

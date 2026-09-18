@@ -13,6 +13,12 @@ class AnalyticsController extends Controller
         $targetCameraSetting = \App\Models\Setting::where('key', 'target_camera')->first();
         $currentTarget = $targetCameraSetting ? $targetCameraSetting->value : 'Simpang Kodim Arah Banjar';
 
+        $linePositionSetting = \App\Models\Setting::where('key', 'line_position')->first();
+        $linePosition = $linePositionSetting ? $linePositionSetting->value : 60;
+
+        $lineDirectionSetting = \App\Models\Setting::where('key', 'line_direction')->first();
+        $lineDirection = $lineDirectionSetting ? $lineDirectionSetting->value : 'normal';
+
         // Ambil 30 data terakhir untuk render pertama kali
         $logs = TrafficLog::where('camera_name', $currentTarget)
             ->latest()
@@ -22,13 +28,17 @@ class AnalyticsController extends Controller
             ->values();
 
         $labels = [];
-        $carData = [];
-        $motorData = [];
+        $carIn = [];
+        $carOut = [];
+        $motorIn = [];
+        $motorOut = [];
 
         foreach ($logs as $log) {
             $labels[] = \Carbon\Carbon::parse($log->created_at)->format('H:i');
-            $carData[] = $log->car_count;
-            $motorData[] = $log->motorcycle_count;
+            $carIn[] = $log->car_in ?? 0;
+            $carOut[] = $log->car_out ?? 0;
+            $motorIn[] = $log->motorcycle_in ?? 0;
+            $motorOut[] = $log->motorcycle_out ?? 0;
         }
 
         // Ambil kamera terakhir yang sedang diproses oleh AI
@@ -58,24 +68,26 @@ class AnalyticsController extends Controller
             // Abaikan jika AMS tidak jalan di lokal
         }
 
-        $targetCameraSetting = \App\Models\Setting::where('key', 'target_camera')->first();
-        $currentTarget = $targetCameraSetting ? $targetCameraSetting->value : 'Simpang Kodim Arah Banjar';
-
-        return view('analytics.index', compact('labels', 'carData', 'motorData', 'cameraName', 'streamId', 'activeCameras', 'currentTarget'));
+        return view('analytics.index', compact(
+            'labels', 'carIn', 'carOut', 'motorIn', 'motorOut', 
+            'cameraName', 'streamId', 'activeCameras', 'currentTarget',
+            'linePosition', 'lineDirection'
+        ));
     }
 
     public function updateTargetCamera(Request $request)
     {
         $request->validate([
-            'target_camera' => 'required|string'
+            'target_camera' => 'required|string',
+            'line_position' => 'required|numeric|min:10|max:90',
+            'line_direction' => 'required|in:normal,swapped'
         ]);
 
-        \App\Models\Setting::updateOrCreate(
-            ['key' => 'target_camera'],
-            ['value' => $request->target_camera]
-        );
+        \App\Models\Setting::updateOrCreate(['key' => 'target_camera'], ['value' => $request->target_camera]);
+        \App\Models\Setting::updateOrCreate(['key' => 'line_position'], ['value' => $request->line_position]);
+        \App\Models\Setting::updateOrCreate(['key' => 'line_direction'], ['value' => $request->line_direction]);
 
-        return back()->with('status', 'Kamera target AI berhasil diubah. AI akan otomatis me-restart proses dalam 10-30 detik.');
+        return back()->with('status', 'Pengaturan AI berhasil diubah. AI akan otomatis memproses ulang dalam 20 detik.');
     }
 
     public function getChartData()
@@ -83,7 +95,6 @@ class AnalyticsController extends Controller
         $targetCameraSetting = \App\Models\Setting::where('key', 'target_camera')->first();
         $currentTarget = $targetCameraSetting ? $targetCameraSetting->value : 'Simpang Kodim Arah Banjar';
 
-        // Ambil 30 data terakhir (30 menit terakhir karena AI mengirim tiap 1 menit)
         $logs = TrafficLog::where('camera_name', $currentTarget)
             ->latest()
             ->take(30)
@@ -92,19 +103,25 @@ class AnalyticsController extends Controller
             ->values();
 
         $labels = [];
-        $carData = [];
-        $motorData = [];
+        $carIn = [];
+        $carOut = [];
+        $motorIn = [];
+        $motorOut = [];
 
         foreach ($logs as $log) {
             $labels[] = \Carbon\Carbon::parse($log->created_at)->format('H:i');
-            $carData[] = $log->car_count;
-            $motorData[] = $log->motorcycle_count;
+            $carIn[] = $log->car_in ?? 0;
+            $carOut[] = $log->car_out ?? 0;
+            $motorIn[] = $log->motorcycle_in ?? 0;
+            $motorOut[] = $log->motorcycle_out ?? 0;
         }
 
         return response()->json([
             'labels' => $labels,
-            'carData' => $carData,
-            'motorData' => $motorData
+            'carIn' => $carIn,
+            'carOut' => $carOut,
+            'motorIn' => $motorIn,
+            'motorOut' => $motorOut
         ]);
     }
 }

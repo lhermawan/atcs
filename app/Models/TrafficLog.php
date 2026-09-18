@@ -11,5 +11,9 @@ class TrafficLog extends Model
         'camera_name',
         'car_count',
         'motorcycle_count',
+        'car_in',
+        'car_out',
+        'motorcycle_in',
+        'motorcycle_out',
     ];
 }
