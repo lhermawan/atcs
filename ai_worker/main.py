@@ -69,38 +69,42 @@ def yolo_worker(model):
                 frame_to_process = latest_frame.copy()
                 
         if frame_to_process is not None and line_zone is not None:
-            # Jalankan model YOLO biasa
-            results = model(frame_to_process, classes=[2, 3, 5, 7], conf=0.45, verbose=False)[0]
+            # Turunkan batas keyakinan (conf) agar objek malam hari tetap terdeteksi oleh tracker
+            results = model(frame_to_process, classes=[2, 3, 5, 7], conf=0.25, verbose=False)[0]
             
             # Konversi hasil YOLO ke Supervision Detections
             detections = sv.Detections.from_ultralytics(results)
             
             # Update Tracker dengan Detections dari package baru
-            detections = tracker.update(detections)
+            tracked_detections = tracker.update(detections)
             
-            # Memicu Line Zone (Hitung kendaraan yg lewat)
-            crossed_in, crossed_out = line_zone.trigger(detections)
-            
-            # Hitung kategori spesifik
-            temp_car = 0
-            temp_motor = 0
-            
-            for i, (is_in, is_out) in enumerate(zip(crossed_in, crossed_out)):
-                if is_in or is_out:
-                    cls_id = detections.class_id[i]
-                    if cls_id == 2 or cls_id in [5,7]:
-                        temp_car += 1
-                    elif cls_id == 3:
-                        temp_motor += 1
-                        
-            with lock:
-                latest_detections = detections
-                if temp_car > 0:
-                    latest_counts["car"] += temp_car
-                    interval_counts["car"] += temp_car
-                if temp_motor > 0:
-                    latest_counts["motorcycle"] += temp_motor
-                    interval_counts["motorcycle"] += temp_motor
+            # Memicu Line Zone HANYA jika ada objek yang dilacak
+            if len(tracked_detections) > 0:
+                crossed_in, crossed_out = line_zone.trigger(tracked_detections)
+                
+                # Hitung kategori spesifik
+                temp_car = 0
+                temp_motor = 0
+                
+                for i, (is_in, is_out) in enumerate(zip(crossed_in, crossed_out)):
+                    if is_in or is_out:
+                        cls_id = tracked_detections.class_id[i]
+                        if cls_id == 2 or cls_id in [5,7]:
+                            temp_car += 1
+                        elif cls_id == 3:
+                            temp_motor += 1
+                            
+                with lock:
+                    latest_detections = tracked_detections
+                    if temp_car > 0:
+                        latest_counts["car"] += temp_car
+                        interval_counts["car"] += temp_car
+                    if temp_motor > 0:
+                        latest_counts["motorcycle"] += temp_motor
+                        interval_counts["motorcycle"] += temp_motor
+            else:
+                with lock:
+                    latest_detections = tracked_detections
                 
         time.sleep(0.01)
 
@@ -197,10 +201,11 @@ def main():
             motor_total = latest_counts["motorcycle"]
             
         # Gambar kotak, label, dan garis menggunakan Supervision Annotator
-        if current_detections is not None:
-            # Custom labels untuk mengganti nama class bahasa inggris ke indonesia
+        if current_detections is not None and len(current_detections) > 0:
             labels = []
-            for class_id, tracker_id in zip(current_detections.class_id, current_detections.tracker_id):
+            for i in range(len(current_detections)):
+                class_id = current_detections.class_id[i]
+                tracker_id = current_detections.tracker_id[i] if current_detections.tracker_id is not None else "..."
                 if class_id == 2: name = "Mobil"
                 elif class_id == 3: name = "Motor"
                 else: name = "Kend. Besar"
