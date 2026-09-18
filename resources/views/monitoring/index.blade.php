@@ -3,19 +3,19 @@
 @section('content')
 <div class="flex flex-col gap-4 h-full min-h-[calc(100vh-8rem)] relative z-10">
     <!-- Header Control Panel -->
-    <div class="bg-white/70 dark:bg-slate-900/70 backdrop-blur-md p-4 rounded-xl shadow-sm border border-slate-200/50 dark:border-slate-700/50 flex flex-wrap justify-between items-center gap-4">
-        <h2 class="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
+    <div class="bg-white/70 backdrop-blur-md p-4 rounded-xl shadow-sm border border-slate-200/50 flex flex-wrap justify-between items-center gap-4">
+        <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
             <svg class="w-6 h-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
             Command Center Grid
         </h2>
         
         <div class="flex items-center gap-2">
             <span class="text-sm text-slate-500 font-medium mr-2">Pilih Layout:</span>
-            <button onclick="changeLayout(1)" class="layout-btn px-3 py-1.5 text-sm font-semibold rounded-md border border-slate-300 dark:border-slate-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors" data-grid="1">1x1</button>
-            <button onclick="changeLayout(4)" class="layout-btn px-3 py-1.5 text-sm font-semibold rounded-md border border-slate-300 dark:border-slate-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors" data-grid="4">2x2</button>
-            <button onclick="changeLayout(9)" class="layout-btn px-3 py-1.5 text-sm font-semibold rounded-md border border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 transition-colors" data-grid="9">3x3</button>
-            <button onclick="changeLayout(16)" class="layout-btn px-3 py-1.5 text-sm font-semibold rounded-md border border-slate-300 dark:border-slate-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors" data-grid="16">4x4</button>
-            <button onclick="changeLayout(25)" class="layout-btn px-3 py-1.5 text-sm font-semibold rounded-md border border-slate-300 dark:border-slate-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors" data-grid="25">5x5</button>
+            <button onclick="changeLayout(1)" class="layout-btn px-3 py-1.5 text-sm font-semibold rounded-md border border-slate-300 hover:bg-indigo-50 transition-colors" data-grid="1">1x1</button>
+            <button onclick="changeLayout(4)" class="layout-btn px-3 py-1.5 text-sm font-semibold rounded-md border border-slate-300 hover:bg-indigo-50 transition-colors" data-grid="4">2x2</button>
+            <button onclick="changeLayout(9)" class="layout-btn px-3 py-1.5 text-sm font-semibold rounded-md border border-indigo-500 bg-indigo-50 text-indigo-600 transition-colors" data-grid="9">3x3</button>
+            <button onclick="changeLayout(16)" class="layout-btn px-3 py-1.5 text-sm font-semibold rounded-md border border-slate-300 hover:bg-indigo-50 transition-colors" data-grid="16">4x4</button>
+            <button onclick="changeLayout(25)" class="layout-btn px-3 py-1.5 text-sm font-semibold rounded-md border border-slate-300 hover:bg-indigo-50 transition-colors" data-grid="25">5x5</button>
         </div>
     </div>
 
@@ -190,9 +190,9 @@
         // Update Buttons
         btns.forEach(btn => {
             if(parseInt(btn.getAttribute('data-grid')) === count) {
-                btn.className = "layout-btn px-3 py-1.5 text-sm font-semibold rounded-md border border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 transition-colors";
+                btn.className = "layout-btn px-3 py-1.5 text-sm font-semibold rounded-md border border-indigo-500 bg-indigo-50 text-indigo-600 transition-colors";
             } else {
-                btn.className = "layout-btn px-3 py-1.5 text-sm font-semibold rounded-md border border-slate-300 dark:border-slate-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-slate-700 dark:text-slate-300 transition-colors";
+                btn.className = "layout-btn px-3 py-1.5 text-sm font-semibold rounded-md border border-slate-300 hover:bg-indigo-50 text-slate-700 transition-colors";
             }
         });
 

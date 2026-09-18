@@ -10,11 +10,11 @@
             <h2 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 mb-1">
                 Live Monitoring ATCS
             </h2>
-            <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Pantau arus lalu lintas Kabupaten Ciamis secara real-time.</p>
+            <p class="text-slate-500 text-sm font-medium">Pantau arus lalu lintas Kabupaten Ciamis secara real-time.</p>
         </div>
 
         @if (!empty($cctvs) && isset($cctvs[0]))
-        <div class="relative bg-black rounded-xl overflow-hidden shadow-2xl ring-1 ring-white/10 dark:ring-white/5 group aspect-video">
+        <div class="relative bg-black rounded-xl overflow-hidden shadow-2xl ring-1 ring-white/10 group aspect-video">
             <!-- Efek Glow di belakang video -->
             <div class="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200 pointer-events-none"></div>
             
@@ -32,14 +32,14 @@
             </video>
         </div>
         
-        <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
             <div class="flex justify-between items-start">
                 <div>
-                    <h2 id="video-title" class="text-2xl font-bold text-slate-800 dark:text-white mb-2">
+                    <h2 id="video-title" class="text-2xl font-bold text-slate-800 mb-2">
                         {{ $cctvs[0]['name'] }}
                     </h2>
-                    <div class="flex items-center gap-3 text-sm text-slate-500 dark:text-slate-400 font-medium">
-                        <span id="main-status-badge" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400">
+                    <div class="flex items-center gap-3 text-sm text-slate-500 font-medium">
+                        <span id="main-status-badge" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-red-50 text-red-600">
                             <span class="relative flex h-2 w-2">
                               <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                               <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
@@ -64,9 +64,9 @@
 
     <!-- Sidebar List -->
     <div class="lg:col-span-1">
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 h-[calc(100vh-8rem)] flex flex-col sticky top-24">
-            <div class="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 rounded-t-xl">
-                <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2">
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 h-[calc(100vh-8rem)] flex flex-col sticky top-24">
+            <div class="p-4 border-b border-slate-200 bg-slate-50 rounded-t-xl">
+                <h3 class="font-bold text-slate-800 flex items-center gap-2">
                     <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                     Daftar Kamera CCTV
                 </h3>
@@ -76,7 +76,7 @@
                 @forelse ($cctvs as $cctv)
                 <button 
                     type="button"
-                    class="cctv-card group flex gap-3 p-2.5 rounded-lg border text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-lg {{ $loop->first ? 'border-indigo-500 bg-gradient-to-r from-indigo-50/80 to-purple-50/80 dark:from-indigo-900/30 dark:to-purple-900/30 ring-1 ring-indigo-500 shadow-md' : 'border-slate-200/60 dark:border-slate-700/60 hover:border-indigo-300 dark:hover:border-indigo-500/50 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm' }}"
+                    class="cctv-card group flex gap-3 p-2.5 rounded-lg border text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-lg {{ $loop->first ? 'border-indigo-500 bg-gradient-to-r from-indigo-50/80 to-purple-50/80 ring-1 ring-indigo-500 shadow-md' : 'border-slate-200/60 hover:border-indigo-300 bg-white/50 backdrop-blur-sm' }}"
                     data-video-url="https://ams.ciamiskab.go.id:5443/LiveApp/streams/{{ $cctv['streamId'] }}.m3u8"
                     data-stream-id="{{ $cctv['streamId'] }}"
                 >
@@ -87,12 +87,12 @@
                         </div>
                     </div>
                     <div class="flex flex-col justify-center overflow-hidden w-full">
-                        <h4 class="font-semibold text-sm text-slate-800 dark:text-slate-200 truncate cctv-title group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                        <h4 class="font-semibold text-sm text-slate-800 truncate cctv-title group-hover:text-indigo-600 transition-colors">
                             {{ $cctv['name'] }}
                         </h4>
                         <div class="flex items-center justify-between mt-1">
                             @if(($cctv['status'] ?? '') === 'broadcasting')
-                                <span class="text-xs font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-1 cctv-badge" data-id="{{ $cctv['streamId'] }}">
+                                <span class="text-xs font-medium text-emerald-600 flex items-center gap-1 cctv-badge" data-id="{{ $cctv['streamId'] }}">
                                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Live
                                 </span>
                             @else
@@ -100,7 +100,7 @@
                                     <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Offline
                                 </span>
                             @endif
-                            <span class="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                            <span class="text-xs text-slate-500 flex items-center gap-1">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                                 <span class="viewer-count" data-id="{{ $cctv['streamId'] }}">{{ $cctv['hlsViewerCount'] }}</span>
                             </span>
@@ -108,7 +108,7 @@
                     </div>
                 </button>
                 @empty
-                <div class="text-center py-10 px-4 text-slate-500 dark:text-slate-400">
+                <div class="text-center py-10 px-4 text-slate-500">
                     <p class="text-sm">Belum ada CCTV yang tersedia.</p>
                 </div>
                 @endforelse
@@ -187,7 +187,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             if (badge) {
                                 if (data[id].status === 'broadcasting') {
                                     badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Live`;
-                                    badge.className = "text-xs font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-1 cctv-badge";
+                                    badge.className = "text-xs font-medium text-emerald-600 flex items-center gap-1 cctv-badge";
                                 } else {
                                     badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Offline`;
                                     badge.className = "text-xs font-medium text-slate-500 flex items-center gap-1 cctv-badge";
@@ -202,10 +202,10 @@ document.addEventListener('DOMContentLoaded', function () {
                                 if (mainBadge) {
                                     if (data[id].status === 'broadcasting') {
                                         mainBadge.innerHTML = `<span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span></span> LIVE`;
-                                        mainBadge.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400";
+                                        mainBadge.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-red-50 text-red-600";
                                     } else {
                                         mainBadge.innerHTML = `<span class="relative flex h-2 w-2"><span class="relative inline-flex rounded-full h-2 w-2 bg-slate-500"></span></span> OFFLINE`;
-                                        mainBadge.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400";
+                                        mainBadge.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 text-slate-600";
                                     }
                                 }
                             }
