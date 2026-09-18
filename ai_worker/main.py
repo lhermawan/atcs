@@ -8,7 +8,7 @@ import sys
 import os
 
 # --- KONFIGURASI DASAR ---
-AMS_API_URL = "http://127.0.0.1:5080/LiveApp/rest/v2/broadcasts/list/0/50"
+AMS_API_URL = "http://192.168.122.1:5080/LiveApp/rest/v2/broadcasts/list/0/50"
 API_URL = "https://api.atcs.ciamiskab.go.id/api/traffic-logs"
 CONFIG_API_URL = "https://api.atcs.ciamiskab.go.id/api/ai-config"
 
@@ -139,8 +139,8 @@ def main():
         return
         
     clean_name = camera_name.replace(" ", "_").replace("-", "_")
-    SOURCE_STREAM = f"http://127.0.0.1:5080/LiveApp/streams/{stream_id}.m3u8"
-    TARGET_RTMP = f"rtmp://127.0.0.1/live/{clean_name}_ai"
+    SOURCE_STREAM = f"http://192.168.122.1:5080/LiveApp/streams/{stream_id}.m3u8"
+    TARGET_RTMP = f"rtmp://192.168.122.1/live/{clean_name}_ai"
     
     print(f"[{camera_name}] Ditemukan! Stream ID: {stream_id}")
     print("Memuat Model YOLOv8s (Small)...")
