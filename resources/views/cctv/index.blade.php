@@ -1,268 +1,224 @@
-@include('layout.header')
+@extends('layouts.app')
 
+@section('content')
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Main Video Section -->
+    <div class="lg:col-span-2 flex flex-col gap-4">
+        
+        <!-- Banner Teks Dinamis -->
+        <div class="mb-2">
+            <h2 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 mb-1">
+                Live Monitoring ATCS
+            </h2>
+            <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Pantau arus lalu lintas Kabupaten Ciamis secara real-time.</p>
+        </div>
 
-
-         <div id="content-wrapper">
-            <div class="container-fluid pb-0">
-               <div class="video-block-right-list section-padding">
-                  <div class="row mb-4">
-                  <div class="col-md-8">
-                       {{-- Single Video Player --}}
-                <div class="single-video">
-                    @if (!empty($cctvs) && isset($cctvs[0]))
-                    <video
-    id="main-video"
-    class="video-js vjs-default-skin"
-    controls
-    preload="auto"
-    autoplay
-    muted
-    style="width: 100% !important; height: 500px;"
-    poster="{{ asset('img/CCTV-tower.jpg') }}"
-    data-setup='{"autoplay": true}'
->
-
-
-        <source src="https://ams.ciamiskab.go.id:5443/LiveApp/streams/{{ $cctvs[0]['streamId'] }}.m3u8" type="application/x-mpegURL" />
-    </video>
-@else
-    <p class="text-red-500">Tidak ada siaran CCTV yang aktif saat ini.</p>
-@endif
-                    
-                    </video>
+        @if (!empty($cctvs) && isset($cctvs[0]))
+        <div class="relative bg-black rounded-xl overflow-hidden shadow-2xl ring-1 ring-white/10 dark:ring-white/5 group aspect-video">
+            <!-- Efek Glow di belakang video -->
+            <div class="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200 pointer-events-none"></div>
+            
+            <video
+                id="main-video"
+                class="video-js vjs-default-skin vjs-big-play-centered w-full h-full relative z-10"
+                controls
+                preload="auto"
+                autoplay
+                muted
+                poster="{{ asset('img/CCTV-tower.jpg') }}"
+                data-setup='{"autoplay": true, "fluid": true}'
+            >
+                <source src="https://ams.ciamiskab.go.id:5443/LiveApp/streams/{{ $cctvs[0]['streamId'] }}.m3u8" type="application/x-mpegURL" />
+            </video>
+        </div>
+        
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h2 id="video-title" class="text-2xl font-bold text-slate-800 dark:text-white mb-2">
+                        {{ $cctvs[0]['name'] }}
+                    </h2>
+                    <div class="flex items-center gap-3 text-sm text-slate-500 dark:text-slate-400 font-medium">
+                        <span id="main-status-badge" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400">
+                            <span class="relative flex h-2 w-2">
+                              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                              <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                            </span>
+                            LIVE
+                        </span>
+                        <span class="flex items-center gap-1.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                            <span id="viewer-count-main">{{ $cctvs[0]['hlsViewerCount'] }}</span> Viewers
+                        </span>
+                    </div>
                 </div>
-                  </div>
-                  <div class="col-md-4">
-                        {{-- Daftar CCTV --}}
-<div class="video-slider-right-list">
-
-    @forelse ($cctvs as $cctv)
-    <div
-        class="video-card video-card-list {{ $loop->first ? 'active' : '' }}"
-        style="cursor:pointer"
-        data-video-url="https://ams.ciamiskab.go.id:5443/LiveApp/streams/{{ $cctv['streamId'] }}.m3u8"
-    >
-        <div class="video-card-image position-relative">
-            <a class="play-icon" href="javascript:void(0);"><i class="fas fa-play-circle"></i></a>
-            <a href="javascript:void(0);">
-                <img class="img-fluid" src="{{ asset('img/CCTV-tower.jpg')}}" alt="Thumbnail">
-            </a>
-            <div class="time">
-                {{ $cctv['status'] === 'broadcasting' ? 'Live' : 'Offline' }}
             </div>
         </div>
-        <div class="video-card-body">
-            <div class="video-title">
-                <a href="javascript:void(0);">{{ $cctv['name'] }}</a>
+        @else
+        <div class="rounded-xl overflow-hidden shadow-lg bg-slate-900 aspect-video flex flex-col items-center justify-center text-slate-400">
+            <svg class="w-16 h-16 mb-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
+            <p class="text-lg font-semibold">{{ $errorMessage ?? 'Tidak ada siaran CCTV aktif saat ini.' }}</p>
+        </div>
+        @endif
+    </div>
+
+    <!-- Sidebar List -->
+    <div class="lg:col-span-1">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 h-[calc(100vh-8rem)] flex flex-col sticky top-24">
+            <div class="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 rounded-t-xl">
+                <h3 class="font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                    <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                    Daftar Kamera CCTV
+                </h3>
             </div>
-            <div class="video-page text-success">
-                Streaming
-                <a title="" data-placement="top" data-toggle="tooltip" href="#" data-original-title="Verified">
-                    <i class="fas fa-check-circle text-success"></i>
-                </a>
-            </div>
-            <div class="video-view">
-                <span class="viewer-count-list" data-stream-id="{{ $cctv['streamId'] }}">
-                    {{ $cctv['hlsViewerCount'] }} Views&nbsp;
-                </span><i class="fas fa-eye"></i>
+            
+            <div class="p-4 overflow-y-auto flex-grow flex flex-col gap-3 custom-scrollbar">
+                @forelse ($cctvs as $cctv)
+                <button 
+                    type="button"
+                    class="cctv-card group flex gap-3 p-2.5 rounded-lg border text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-lg {{ $loop->first ? 'border-indigo-500 bg-gradient-to-r from-indigo-50/80 to-purple-50/80 dark:from-indigo-900/30 dark:to-purple-900/30 ring-1 ring-indigo-500 shadow-md' : 'border-slate-200/60 dark:border-slate-700/60 hover:border-indigo-300 dark:hover:border-indigo-500/50 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm' }}"
+                    data-video-url="https://ams.ciamiskab.go.id:5443/LiveApp/streams/{{ $cctv['streamId'] }}.m3u8"
+                    data-stream-id="{{ $cctv['streamId'] }}"
+                >
+                    <div class="relative w-24 h-16 rounded-md overflow-hidden flex-shrink-0 bg-slate-900">
+                        <img src="{{ asset('img/CCTV-tower.jpg') }}" alt="Thumb" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity">
+                        <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <svg class="w-8 h-8 text-white drop-shadow-md" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        </div>
+                    </div>
+                    <div class="flex flex-col justify-center overflow-hidden w-full">
+                        <h4 class="font-semibold text-sm text-slate-800 dark:text-slate-200 truncate cctv-title group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                            {{ $cctv['name'] }}
+                        </h4>
+                        <div class="flex items-center justify-between mt-1">
+                            @if(($cctv['status'] ?? '') === 'broadcasting')
+                                <span class="text-xs font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-1 cctv-badge" data-id="{{ $cctv['streamId'] }}">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Live
+                                </span>
+                            @else
+                                <span class="text-xs font-medium text-slate-500 flex items-center gap-1 cctv-badge" data-id="{{ $cctv['streamId'] }}">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Offline
+                                </span>
+                            @endif
+                            <span class="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                <span class="viewer-count" data-id="{{ $cctv['streamId'] }}">{{ $cctv['hlsViewerCount'] }}</span>
+                            </span>
+                        </div>
+                    </div>
+                </button>
+                @empty
+                <div class="text-center py-10 px-4 text-slate-500 dark:text-slate-400">
+                    <p class="text-sm">Belum ada CCTV yang tersedia.</p>
+                </div>
+                @endforelse
             </div>
         </div>
     </div>
-@empty
-    <div class="alert alert-warning">
-        Tidak ada CCTV yang tersedia atau sedang siaran saat ini.
-    </div>
-@endforelse
-
 </div>
-                  </div>
-                  </div>
-               </div>
-               <div class="video-block section-padding">
-                  <div class="row">
-                     <div class="col-md-8">
-                        <div class="single-video-left">
-                           <div class="single-video-title box mb-3">
-   @if (!empty($cctvs) && isset($cctvs[0]))
-    <h2 id="video-title"><a href="#">{{ $cctvs[0]['name'] }}</a></h2>
-    <p class="mb-0"><i class="fas fa-eye"></i> <span id="viewer-count-main">{{ $cctvs[0]['hlsViewerCount'] }} Views</span></p>
-@else
-    <h2 id="video-title"><a href="#">Tidak ada CCTV aktif</a></h2>
-    <p class="mb-0"><i class="fas fa-eye"></i> <span id="viewer-count-main">0 Views</span></p>
-@endif
-</div>
-                           <div class="single-video-author box mb-3">
-                              <div class="float-right"><a href="https://www.instagram.com/atcs.ciamis/" target='_blank'><button class="btn btn-danger" type="button"> Follow me On <i class="fa-brands fa-instagram"></i><strong></strong></button></a> </div>
-                              <img class="img-fluid" src="{{ asset('img/logo.jpg')}}" alt="">
-                              <p><a href="https://www.instagram.com/atcs.ciamis/"><strong>ATCS DISHUB </strong></a> <span title="" data-placement="top" data-toggle="tooltip" data-original-title="Verified"><i class="fas fa-check-circle text-success"></i></span></p>
-                              <small>KABUPATEN CIAMIS</small>
-                           </div>
+@endsection
 
+@push('scripts')
+<style>
+    /* Custom Scrollbar for Sidebar */
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 20px; }
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #475569; }
 
-                        </div>
-                     </div>
-                     <div class="col-md-4">
-                        <div class="single-video-right">
-                           <div class="row">
-                              <div class="col-md-12">
-                                 {{-- <div class="adblock">
-                                    <div class="img">
-                                       Google AdSense<br>
-                                       336 x 280
-                                    </div>
-                                 </div> --}}
-
-                              </div>
-
-                           </div>
-                        </div>
-                     </div>
-                  </div>
-               </div>
-            </div>
-            <!-- /.container-fluid -->
-            <!-- Sticky Footer -->
-            {{-- <footer class="sticky-footer">
-               <div class="container">
-                  <div class="row no-gutters">
-                     <div class="col-lg-6 col-sm-6">
-                        <p class="mt-1 mb-0">&copy; Copyright 2018 <strong class="text-dark">Vidoe</strong>. All Rights Reserved<br>
-                           <small class="mt-0 mb-0">Made with <i class="fas fa-heart text-danger"></i> by <a class="text-primary" target="_blank" href="https://askbootstrap.com/">Ask Bootstrap</a>
-                           </small>
-                        </p>
-                     </div>
-                     <div class="col-lg-6 col-sm-6 text-right">
-                        <div class="app">
-                           <a href="#"><img alt="" src="img/google.png"></a>
-                           <a href="#"><img alt="" src="img/apple.png"></a>
-                        </div>
-                     </div>
-                  </div>
-               </div>
-            </footer> --}}
-         </div>
-         <!-- /.content-wrapper -->
-      </div>
-      <!-- /#wrapper -->
-      <!-- Scroll to Top Button-->
-      <a class="scroll-to-top rounded" href="#page-top">
-      <i class="fas fa-angle-up"></i>
-      </a>
-      <!-- Logout Modal-->
-      {{-- <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-         <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
-            <div class="modal-content">
-               <div class="modal-header">
-                  <h5 class="modal-title" id="exampleModalLabel">Ready to Leave?</h5>
-                  <button class="close" type="button" data-dismiss="modal" aria-label="Close">
-                  <span aria-hidden="true">×</span>
-                  </button>
-               </div>
-               <div class="modal-body">Select "Logout" below if you are ready to end your current session.</div>
-               <div class="modal-footer">
-                  <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
-                  <a class="btn btn-primary" href="login.html">Logout</a>
-               </div>
-            </div>
-         </div>
-      </div> --}}
-
-{{-- Style Highlight Active Card --}}
-{{-- <style>
-    .video-card.video-card-list {
-        border: 1px solid transparent;
-        transition: border-color 0.3s ease, box-shadow 0.3s ease;
-        margin-bottom: 15px;
-        border-radius: 6px;
-        overflow: hidden;
+    /* Sembunyikan pesan error bawaan video.js yang mengganggu */
+    .video-js .vjs-error-display,
+    .video-js .vjs-modal-dialog { 
+        display: none !important; 
     }
-    .video-card.video-card-list:hover {
-        border-color: #007bff;
-        box-shadow: 0 0 10px rgba(0,123,255,0.3);
-    }
-    .video-card.video-card-list.active {
-        border-color: #007bff;
-        box-shadow: 0 0 15px rgba(0,123,255,0.6);
-        background-color: #f0f8ff;
-    }
-</style> --}}
+</style>
 
-{{-- Script untuk ganti video dan highlight active card --}}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    @if (!empty($cctvs) && isset($cctvs[0]))
     const player = videojs('main-video');
-    let activeStreamId = "{{ !empty($cctvs) && isset($cctvs[0]) ? $cctvs[0]['streamId'] : '' }}";
+    let activeStreamId = "{{ $cctvs[0]['streamId'] }}";
 
-    function updateViewerCount(streamId, callback) {
-        fetch(`https://ams.ciamiskab.go.id:5443/LiveApp/rest/v2/broadcasts/${streamId}`)
-            .then(res => res.json())
-            .then(data => {
-                if (data && data.hlsViewerCount !== undefined) {
-                    if (typeof callback === 'function') callback(data.hlsViewerCount);
-                }
-            })
-            .catch(err => console.error("Gagal ambil viewer:", err));
-    }
+    // Ganti video saat klik list CCTV
+    document.querySelectorAll('.cctv-card').forEach(card => {
+        card.addEventListener('click', function() {
+            // Hapus style active dari semua card
+            document.querySelectorAll('.cctv-card').forEach(c => {
+                c.classList.remove('border-indigo-500', 'bg-gradient-to-r', 'from-indigo-50/80', 'to-purple-50/80', 'dark:from-indigo-900/30', 'dark:to-purple-900/30', 'ring-1', 'ring-indigo-500', 'shadow-md');
+                c.classList.add('border-slate-200/60', 'dark:border-slate-700/60', 'bg-white/50', 'dark:bg-slate-800/50', 'backdrop-blur-sm');
+            });
+            
+            // Tambahkan style active ke card yang diklik
+            this.classList.remove('border-slate-200/60', 'dark:border-slate-700/60', 'bg-white/50', 'dark:bg-slate-800/50', 'backdrop-blur-sm');
+            this.classList.add('border-indigo-500', 'bg-gradient-to-r', 'from-indigo-50/80', 'to-purple-50/80', 'dark:from-indigo-900/30', 'dark:to-purple-900/30', 'ring-1', 'ring-indigo-500', 'shadow-md');
 
-    function updateAllViewerCounts() {
-        const viewerSpans = document.querySelectorAll('.viewer-count-list');
-        viewerSpans.forEach(span => {
-            const streamId = span.getAttribute('data-stream-id');
-            if (streamId) {
-                updateViewerCount(streamId, (count) => {
-                    span.textContent = `${count} Views`;
-                });
-            }
-        });
-    }
+            const videoUrl = this.getAttribute('data-video-url');
+            const streamId = this.getAttribute('data-stream-id');
+            const title = this.querySelector('.cctv-title').innerText;
 
-    function updateMainViewerCount() {
-        updateViewerCount(activeStreamId, (count) => {
-            document.getElementById('viewer-count-main').textContent = `${count} Views`;
-        });
-    }
-
-    // Auto update setiap 5 detik
-    setInterval(() => {
-        updateAllViewerCounts();
-        updateMainViewerCount();
-    }, 5000);
-
-    // Pertama kali jalan
-    updateAllViewerCounts();
-    updateMainViewerCount();
-
-    // Saat klik ganti video
-    document.querySelectorAll('.video-card.video-card-list').forEach(card => {
-        card.addEventListener('click', () => {
-            document.querySelectorAll('.video-card.video-card-list').forEach(c => c.classList.remove('active'));
-            card.classList.add('active');
-
-            const videoUrl = card.getAttribute('data-video-url');
-            const streamId = new URL(videoUrl).pathname.split('/').pop().replace('.m3u8', '');
-            const videoTitle = card.querySelector('.video-title a')?.textContent || 'Judul tidak ditemukan';
-
-            if (videoUrl && videoUrl !== '#') {
+            if (videoUrl) {
                 player.src({ type: 'application/x-mpegURL', src: videoUrl });
                 player.play();
-
+                
                 activeStreamId = streamId;
-                document.getElementById('video-title').innerHTML = `<a href="#">${videoTitle}</a>`;
-                updateMainViewerCount();
+                document.getElementById('video-title').innerText = title;
+                
+                // Sinkronisasi view count utama segera setelah diklik
+                const currentViewCount = this.querySelector('.viewer-count').innerText;
+                document.getElementById('viewer-count-main').innerText = currentViewCount;
             }
         });
     });
+
+    // Polling Viewer Stats dari Backend Internal (bukan AMS langsung)
+    function fetchStats() {
+        fetch('/api/cctv/stats')
+            .then(res => res.json())
+            .then(data => {
+                if (data && !data.error) {
+                    // Update semua angka viewers & status di list
+                    document.querySelectorAll('.viewer-count').forEach(el => {
+                        const id = el.getAttribute('data-id');
+                        if (data[id] !== undefined) {
+                            el.innerText = data[id].viewers;
+                            
+                            // Update Badge Status
+                            const badge = document.querySelector(`.cctv-badge[data-id="${id}"]`);
+                            if (badge) {
+                                if (data[id].status === 'broadcasting') {
+                                    badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Live`;
+                                    badge.className = "text-xs font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-1 cctv-badge";
+                                } else {
+                                    badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Offline`;
+                                    badge.className = "text-xs font-medium text-slate-500 flex items-center gap-1 cctv-badge";
+                                }
+                            }
+
+                            // Jika ini kamera yang sedang aktif, update juga angka utama
+                            if (id === activeStreamId) {
+                                document.getElementById('viewer-count-main').innerText = data[id].viewers;
+                                
+                                const mainBadge = document.getElementById('main-status-badge');
+                                if (mainBadge) {
+                                    if (data[id].status === 'broadcasting') {
+                                        mainBadge.innerHTML = `<span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span></span> LIVE`;
+                                        mainBadge.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400";
+                                    } else {
+                                        mainBadge.innerHTML = `<span class="relative flex h-2 w-2"><span class="relative inline-flex rounded-full h-2 w-2 bg-slate-500"></span></span> OFFLINE`;
+                                        mainBadge.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400";
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            })
+            .catch(err => console.error("Gagal polling stats:", err));
+    }
+
+    // Polling setiap 10 detik
+    setInterval(fetchStats, 10000);
+    @endif
 });
 </script>
-<script src="https://vjs.zencdn.net/7.21.1/video.min.js"></script>
-      <!-- Bootstrap core JavaScript-->
-      <script src="{{ asset('vidoe/vendor/jquery/jquery.min.js') }}"></script>
-      <script src="{{ asset('vidoe/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
-      <!-- Core plugin JavaScript-->
-      <script src="{{ asset('vidoe/vendor/jquery-easing/jquery.easing.min.js') }}"></script>
-      <!-- Owl Carousel -->
-      <script src="{{ asset('vidoe/vendor/owl-carousel/owl.carousel.js') }}"></script>
-      <!-- Custom scripts for all pages-->
-      <script src="{{ asset('vidoe/js/custom.js') }}"></script>
-   </body>
-</html>
+@endpush
