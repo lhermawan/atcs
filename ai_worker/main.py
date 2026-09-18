@@ -185,8 +185,11 @@ def main():
     
     last_api_send = time.time()
     last_config_check = time.time()
+    frame_delay = 1.0 / fps
     
     while True:
+        loop_start = time.time()
+        
         ret, frame = cap.read()
         if not ret:
             print("Stream terputus. Restarting script...")
@@ -257,6 +260,11 @@ def main():
                 process.kill()
                 os.execv(sys.executable, ['python'] + sys.argv)
             last_config_check = current_time
+            
+        # Pacing untuk menstabilkan FPS HLS stream (mencegah penumpukan buffer FFmpeg)
+        time_elapsed = time.time() - loop_start
+        if time_elapsed < frame_delay:
+            time.sleep(frame_delay - time_elapsed)
 
 if __name__ == "__main__":
     main()
