@@ -34,8 +34,10 @@ latest_counts = {"car": 0, "motorcycle": 0}
 interval_counts = {"car": 0, "motorcycle": 0}
 lock = threading.Lock()
 
+from trackers import ByteTrackTracker
+
 # Supervision Setup
-tracker = sv.ByteTrack()
+tracker = ByteTrackTracker()
 line_zone = None
 
 def get_active_stream():
@@ -73,8 +75,8 @@ def yolo_worker(model):
             # Konversi hasil YOLO ke Supervision Detections
             detections = sv.Detections.from_ultralytics(results)
             
-            # Update Tracker dengan Detections
-            detections = tracker.update_with_detections(detections)
+            # Update Tracker dengan Detections dari package baru
+            detections = tracker.update(detections)
             
             # Memicu Line Zone (Hitung kendaraan yg lewat)
             crossed_in, crossed_out = line_zone.trigger(detections)
