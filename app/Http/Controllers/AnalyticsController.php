@@ -43,7 +43,8 @@ class AnalyticsController extends Controller
         // Ambil daftar kamera dari Ant Media Server untuk dropdown
         $activeCameras = [];
         try {
-            $response = \Illuminate\Support\Facades\Http::withOptions(['verify' => false])->timeout(5)->get('http://127.0.0.1:5080/LiveApp/rest/v2/broadcasts/list/0/50');
+            // Karena Laravel jalan di cPanel, harus panggil AMS lewat IP/Domain publik
+            $response = \Illuminate\Support\Facades\Http::withOptions(['verify' => false])->timeout(5)->get('https://ams.ciamiskab.go.id:5443/LiveApp/rest/v2/broadcasts/list/0/50');
             if ($response->successful()) {
                 foreach ($response->json() as $cctv) {
                     // Hanya ambil stream CCTV asli (abaikan stream AI yang berakhiran _ai)
