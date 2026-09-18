@@ -8,17 +8,25 @@ import threading
 # --- KONFIGURASI DASAR ---
 AMS_API_URL = "https://ams.ciamiskab.go.id:5443/LiveApp/rest/v2/broadcasts/list/0/50"
 API_URL = "https://api.atcs.ciamiskab.go.id/api/traffic-logs"
-CAMERA_ID = 1
+TARGET_CAMERA = "Simpang Tonjong Arah Tyara" # Kosongkan ("") jika ingin otomatis memilih CCTV pertama yang nyala
 
 def get_active_stream():
-    """Mengambil satu CCTV pertama yang sedang LIVE dari API Ant Media Server"""
+    """Mengambil satu CCTV dari API Ant Media Server"""
     try:
-        # verify=False digunakan karena kadang SSL lokal Ant Media suka bermasalah
         response = requests.get(AMS_API_URL, verify=False, timeout=10)
         cctvs = response.json()
+        
+        # Jika mencari kamera spesifik
+        if TARGET_CAMERA:
+            for cctv in cctvs:
+                if cctv.get("status") == "broadcasting" and cctv.get("name") == TARGET_CAMERA:
+                    return cctv.get("streamId"), cctv.get("name")
+                    
+        # Fallback: Ambil yang mana saja yang sedang LIVE
         for cctv in cctvs:
             if cctv.get("status") == "broadcasting":
                 return cctv.get("streamId"), cctv.get("name")
+                
     except Exception as e:
         print(f"Gagal mengambil API AMS: {e}")
     return None, None
