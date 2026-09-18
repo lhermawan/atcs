@@ -90,8 +90,5 @@
                 </main>
             </div>
         </div>
-        
-        <!-- Video.js Script for Live Stream -->
-        <script src="https://vjs.zencdn.net/7.21.1/video.min.js"></script>
     </body>
 </html>

@@ -15,21 +15,13 @@
                 <span class="text-xs text-slate-400">Simpang Kodim Arah Banjar</span>
             </div>
             <div class="w-full aspect-video bg-black relative">
-                <!-- Using HLS equivalent or default video source since RTMP directly via HTML5 requires specific setups, assuming AMS provides HLS -->
-                <video
-                    id="live-ai-video"
-                    class="video-js vjs-default-skin vjs-16-9"
-                    controls
-                    autoplay
-                    muted
-                    preload="auto"
-                    data-setup='{"fluid": true}'
-                >
-                    <source src="https://ams.ciamiskab.go.id:5443/live/streams/Simpang_Kodim_Arah_Banjar_ai.m3u8" type="application/x-mpegURL">
-                    <p class="vjs-no-js">
-                        To view this video please enable JavaScript, and consider upgrading to a web browser that supports HTML5 video
-                    </p>
-                </video>
+                <!-- Gunakan iframe bawaan Ant Media Server agar lebih stabil dan otomatis WebRTC/HLS -->
+                <iframe 
+                    src="https://ams.ciamiskab.go.id:5443/live/play.html?name=Simpang_Kodim_Arah_Banjar_ai&autoplay=true" 
+                    frameborder="0" 
+                    allowfullscreen 
+                    class="w-full h-full absolute top-0 left-0">
+                </iframe>
             </div>
         </div>
 
