@@ -14,27 +14,41 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const ctx = document.getElementById('trafficChart').getContext('2d');
+        
+        // Data dari Database Laravel
+        const labels = @json($labels);
+        const carData = @json($carData);
+        const motorData = @json($motorData);
+
         const trafficChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: ['10:00', '11:00', '12:00', '13:00', '14:00', '15:00'],
+                labels: labels.length > 0 ? labels : ['Belum Ada Data'],
                 datasets: [{
-                    label: 'Mobil',
-                    data: [12, 19, 3, 5, 2, 3],
+                    label: 'Rata-rata Mobil per Menit',
+                    data: carData.length > 0 ? carData : [0],
                     borderColor: 'rgba(54, 162, 235, 1)',
-                    tension: 0.1
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    fill: true,
+                    tension: 0.3
                 }, {
-                    label: 'Motor',
-                    data: [20, 30, 15, 25, 10, 18],
+                    label: 'Rata-rata Motor per Menit',
+                    data: motorData.length > 0 ? motorData : [0],
                     borderColor: 'rgba(255, 206, 86, 1)',
-                    tension: 0.1
+                    backgroundColor: 'rgba(255, 206, 86, 0.2)',
+                    fill: true,
+                    tension: 0.3
                 }]
             },
             options: {
                 responsive: true,
                 scales: {
                     y: {
-                        beginAtZero: true
+                        beginAtZero: true,
+                        title: { display: true, text: 'Jumlah Kendaraan' }
+                    },
+                    x: {
+                        title: { display: true, text: 'Jam' }
                     }
                 }
             }

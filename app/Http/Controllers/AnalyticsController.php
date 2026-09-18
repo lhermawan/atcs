@@ -10,6 +10,26 @@ class AnalyticsController extends Controller
 {
     public function index()
     {
-        return view('analytics.index');
+        // Ambil data hari ini, urutkan dari pagi ke malam
+        $todayLogs = TrafficLog::whereDate('created_at', today())
+            ->orderBy('created_at')
+            ->get();
+
+        // Kelompokkan rata-rata kepadatan berdasarkan Jam
+        $hourlyData = $todayLogs->groupBy(function ($log) {
+            return \Carbon\Carbon::parse($log->created_at)->format('H:00');
+        });
+
+        $labels = [];
+        $carData = [];
+        $motorData = [];
+
+        foreach ($hourlyData as $hour => $logs) {
+            $labels[] = $hour;
+            $carData[] = round($logs->avg('car_count'));
+            $motorData[] = round($logs->avg('motorcycle_count'));
+        }
+
+        return view('analytics.index', compact('labels', 'carData', 'motorData'));
     }
 }
