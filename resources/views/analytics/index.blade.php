@@ -1,12 +1,45 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-6 text-gray-800">ATCS Analytics Dashboard</h1>
+<div class="container mx-auto">
+    <h1 class="text-3xl font-bold mb-6 text-slate-800">ATCS Analytics Dashboard</h1>
     
-    <div class="bg-white rounded-lg shadow p-6">
-        <h2 class="text-xl font-semibold mb-4">Live Traffic Data (Mobil & Motor)</h2>
-        <canvas id="trafficChart" width="400" height="150"></canvas>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Live Video Section -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="bg-slate-900 px-4 py-3 flex justify-between items-center">
+                <h2 class="text-white font-semibold flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                    Live AI Stream
+                </h2>
+                <span class="text-xs text-slate-400">Simpang Kodim Arah Banjar</span>
+            </div>
+            <div class="w-full aspect-video bg-black relative">
+                <!-- Using HLS equivalent or default video source since RTMP directly via HTML5 requires specific setups, assuming AMS provides HLS -->
+                <video
+                    id="live-ai-video"
+                    class="video-js vjs-default-skin vjs-16-9"
+                    controls
+                    autoplay
+                    muted
+                    preload="auto"
+                    data-setup='{"fluid": true}'
+                >
+                    <source src="https://ams.ciamiskab.go.id:5443/live/streams/Simpang_Kodim_Arah_Banjar_ai.m3u8" type="application/x-mpegURL">
+                    <p class="vjs-no-js">
+                        To view this video please enable JavaScript, and consider upgrading to a web browser that supports HTML5 video
+                    </p>
+                </video>
+            </div>
+        </div>
+
+        <!-- Chart Section -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col">
+            <h2 class="text-lg font-semibold mb-4 text-slate-800">Trafik Kepadatan (Hari Ini)</h2>
+            <div class="flex-1 w-full relative min-h-[300px]">
+                <canvas id="trafficChart"></canvas>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -42,6 +75,7 @@
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 scales: {
                     y: {
                         beginAtZero: true,
