@@ -30,6 +30,17 @@ class AnalyticsController extends Controller
             $motorData[] = round($logs->avg('motorcycle_count'));
         }
 
-        return view('analytics.index', compact('labels', 'carData', 'motorData'));
+        // Ambil kamera terakhir yang sedang diproses oleh AI
+        $latestLog = TrafficLog::latest()->first();
+        $cameraName = $latestLog ? $latestLog->camera_name : 'Menunggu Data AI...';
+        
+        $streamId = '';
+        if ($latestLog) {
+            // Replikasi logika Python: clean_name = camera_name.replace(" ", "_").replace("-", "_")
+            $cleanName = str_replace([' ', '-'], '_', $latestLog->camera_name);
+            $streamId = $cleanName . '_ai';
+        }
+
+        return view('analytics.index', compact('labels', 'carData', 'motorData', 'cameraName', 'streamId'));
     }
 }

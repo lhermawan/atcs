@@ -12,16 +12,20 @@
                     <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
                     Live AI Stream
                 </h2>
-                <span class="text-xs text-slate-400">Simpang Kodim Arah Banjar</span>
+                <span class="text-xs text-slate-400">{{ $cameraName }}</span>
             </div>
-            <div class="w-full aspect-video bg-black relative">
-                <!-- Gunakan iframe bawaan Ant Media Server agar lebih stabil dan otomatis WebRTC/HLS -->
-                <iframe 
-                    src="https://ams.ciamiskab.go.id:5443/live/play.html?name=Simpang_Kodim_Arah_Banjar_ai&autoplay=true" 
-                    frameborder="0" 
-                    allowfullscreen 
-                    class="w-full h-full absolute top-0 left-0">
-                </iframe>
+            <div class="w-full aspect-video bg-black relative flex items-center justify-center">
+                @if($streamId)
+                    <!-- Gunakan iframe bawaan Ant Media Server agar lebih stabil dan otomatis WebRTC/HLS -->
+                    <iframe 
+                        src="https://ams.ciamiskab.go.id:5443/live/play.html?name={{ $streamId }}&autoplay=true" 
+                        frameborder="0" 
+                        allowfullscreen 
+                        class="w-full h-full absolute top-0 left-0">
+                    </iframe>
+                @else
+                    <span class="text-slate-500 text-sm">Menunggu Stream AI Aktif...</span>
+                @endif
             </div>
         </div>
 
