@@ -71,7 +71,8 @@ def yolo_worker(model):
                 frame_to_process = latest_frame.copy()
                 
         if frame_to_process is not None and line_zone is not None:
-            results = model(frame_to_process, classes=[2, 3, 5, 7], conf=0.25, verbose=False)[0]
+            # Turunkan conf ke 0.15 karena motor dari atas CCTV malam hari sangat kecil & blur
+            results = model(frame_to_process, classes=[2, 3, 5, 7], conf=0.15, verbose=False)[0]
             detections = sv.Detections.from_ultralytics(results)
             tracked_detections = tracker.update(detections)
             
