@@ -5,24 +5,47 @@ import time
 import subprocess
 import threading
 
-# --- KONFIGURASI ---
-SOURCE_STREAM = "http://ams.ciamiskab.go.id:5443/LiveApp/streams/117282772591605481358908.m3u8"
-
-# Beri nama CCTV agar mudah dibaca di Ant Media Server (Tanpa Spasi)
-CAMERA_NAME = "Simpang_Tonjong"
-
-# Menambahkan akhiran _ai dan mengarahkannya ke aplikasi /live
-TARGET_RTMP = f"rtmp://ams.ciamiskab.go.id/live/{CAMERA_NAME}_ai"
-
+# --- KONFIGURASI DASAR ---
+AMS_API_URL = "https://ams.ciamiskab.go.id:5443/LiveApp/rest/v2/broadcasts/list/0/50"
 API_URL = "https://api.atcs.ciamiskab.go.id/api/traffic-logs"
 CAMERA_ID = 1
 
+def get_active_stream():
+    """Mengambil satu CCTV pertama yang sedang LIVE dari API Ant Media Server"""
+    try:
+        # verify=False digunakan karena kadang SSL lokal Ant Media suka bermasalah
+        response = requests.get(AMS_API_URL, verify=False, timeout=10)
+        cctvs = response.json()
+        for cctv in cctvs:
+            if cctv.get("status") == "broadcasting":
+                return cctv.get("streamId"), cctv.get("name")
+    except Exception as e:
+        print(f"Gagal mengambil API AMS: {e}")
+    return None, None
+
 def main():
+    import urllib3
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+    
+    print("Mencari CCTV yang sedang LIVE...")
+    stream_id, camera_name = get_active_stream()
+    
+    if not stream_id:
+        print("Tidak ada CCTV yang sedang LIVE saat ini!")
+        return
+        
+    # Bersihkan nama kamera dari spasi agar aman untuk RTMP
+    clean_name = camera_name.replace(" ", "_").replace("-", "_")
+    
+    SOURCE_STREAM = f"http://ams.ciamiskab.go.id:5443/LiveApp/streams/{stream_id}.m3u8"
+    TARGET_RTMP = f"rtmp://ams.ciamiskab.go.id/live/{clean_name}_ai"
+    
+    print(f"[{camera_name}] Ditemukan! Stream ID: {stream_id}")
     print("Memuat Model YOLOv8...")
     model = YOLO("yolov8n.pt") 
     
     print(f"Membuka sumber video: {SOURCE_STREAM}")
-    cap = cv2.VideoCapture(SOURCE_STREAM)
+    cap = cv2.VideoCapture(SOURCE_STREAM, cv2.CAP_FFMPEG)
     
     if not cap.isOpened():
         print("Gagal membuka stream video!")
@@ -66,7 +89,7 @@ def main():
             print("Stream terputus. Mencoba reconnect...")
             cap.release()
             time.sleep(5)
-            cap = cv2.VideoCapture(SOURCE_STREAM)
+            cap = cv2.VideoCapture(SOURCE_STREAM, cv2.CAP_FFMPEG)
             continue
             
         # Jalankan deteksi YOLO (verbose=False agar terminal rapi)
