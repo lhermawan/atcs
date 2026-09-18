@@ -7,7 +7,13 @@ import threading
 
 # --- KONFIGURASI ---
 SOURCE_STREAM = "http://ams.ciamiskab.go.id:5443/LiveApp/streams/117282772591605481358908.m3u8"
-TARGET_RTMP = "rtmp://ams.ciamiskab.go.id/live/Live_1"
+
+# Mengambil ID Kamera secara dinamis dari URL (misal: 117282772591605481358908)
+STREAM_ID = SOURCE_STREAM.split('/')[-1].replace('.m3u8', '')
+
+# Menambahkan akhiran _ai dan mengarahkannya ke aplikasi /live
+TARGET_RTMP = f"rtmp://ams.ciamiskab.go.id/live/{STREAM_ID}_ai"
+
 API_URL = "https://api.atcs.ciamiskab.go.id/api/traffic-logs"
 CAMERA_ID = 1
 
